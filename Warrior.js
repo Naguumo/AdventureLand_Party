@@ -70,7 +70,10 @@ setInterval(function ()
         enemydist = character.range - 20;
     //Targetting
 
-    move_to_position(leaderTarget, enemydist);
+    if(leaderTarget)
+        move_to_position(leaderTarget, enemydist);
+    else
+        move(leader.real_x, leader.real_y);
     //Movement
 
     prevx = Math.ceil(character.real_x);
