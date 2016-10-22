@@ -1,7 +1,7 @@
 /* global character */
 
-var targetting = 0;
-//Monster Range = 0, Character Range = 1
+var targetting = 2;
+//Monster Range = 0, Character Range = 1, Tank Range = 2
 
 var prevx = 0;
 var prevy = 0;
@@ -12,7 +12,6 @@ var pot2buy = 1000;
 //Pot Maintainence
 
 var pos = 0;
-var flipcd = 0;
 var stuck = 2;
 //Distance Maintainence Variables
 
@@ -39,47 +38,50 @@ setInterval(function ()
     //Constrained Healing
 
     var leader = get_player(character.party);
-    set_message("Following: " + leader.name);
     //Get Party Leader
 
-    var currentTarget = get_targeted_monster();
-    var leaderTarget = get_target_of(leader);
-    var targetTarget = get_target_of(currentTarget);
-    //All the Targets
-
-    if (!currentTarget || currentTarget !== leaderTarget)
+    var target = get_targeted_monster();
+    var ltarget = get_target_of(leader);
+    if (!target || target !== ltarget)
     {
-        change_target(leaderTarget);
-        currentTarget = get_targeted_monster();
+        change_target(ltarget);
+        target = get_targeted_monster();
     }
     //Match Target with Leader
 
-    if (can_attack(currentTarget) && targetTarget === leader)
-        attack(currentTarget);
+    if (target && can_attack(target))
+        attack(target);
     //Attack
-
 
     if (pos >= 5)
         pos = 1;
     //Resetting Circle
 
     var enemydist;
-    if (targetting === 0)
-        enemydist = parent.G.monsters[leaderTarget.mtype].range + 20;
+    if (targetting === 0 && ltarget)
+        enemydist = parent.G.monsters[ltarget.mtype].range + 20;
     else if (targetting === 1)
         enemydist = character.range - 20;
+    else
+        enemydist = 30;
     //Targetting
 
-    if(leaderTarget)
-        move_to_position(leaderTarget, enemydist);
+    if (ltarget && ltarget === target)
+    {
+        move_to_position(ltarget, enemydist);
+        set_message("Attacking: " + target.name);
+    }
     else
+    {
         move(leader.real_x, leader.real_y);
+        set_message("Following: " + leader.name);
+    }
     //Movement
 
     prevx = Math.ceil(character.real_x);
     prevy = Math.ceil(character.real_y);
     //Sets new coords to prev coords
-    
+
 }, 200); // Loop Delay
 
 function move_to_position(target, enemydist) //Movement Algorithm
@@ -90,12 +92,6 @@ function move_to_position(target, enemydist) //Movement Algorithm
     var distmov = Math.sqrt(Math.pow(character.real_x - prevx, 2) + Math.pow(character.real_y - prevy, 2));
     if (distmov < stuck)
         pos++;
-    if (parent.distance(character, target) <= enemydist && flipcd > 18)
-    {
-        pos += 2;
-        flipcd = 0;
-    }
-    flipcd++;
     //Stuck Code
 
     if (pos === 1) //Player is left of enemy
@@ -112,10 +108,10 @@ function get_pos(distx, disty)
 {
     if (distx > 0 && Math.abs(distx) < Math.abs(disty)) //Player is left of enemy
         pos = 1;
-    else if (disty === 2 && Math.abs(distx) > Math.abs(disty)) //Player is above enemy
+    if (disty === 2 && Math.abs(distx) > Math.abs(disty)) //Player is above enemy
         pos = 2;
-    else if (distx < 0 && Math.abs(distx) < Math.abs(disty)) //Player is right of enemy
+    if (distx < 0 && Math.abs(distx) < Math.abs(disty)) //Player is right of enemy
         pos = 3;
-    else if (disty > 0 && Math.abs(distx) > Math.abs(disty)) //Player is below enemy
+    if (disty > 0 && Math.abs(distx) > Math.abs(disty)) //Player is below enemy
         pos = 4;
 }

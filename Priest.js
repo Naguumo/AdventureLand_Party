@@ -5,14 +5,14 @@ var pot2buy = 1000;
 //Pot Maintainence
 
 var party_list =
-        [{name: "Hajime", priority: 1.0},
+        [{name: "Hajime", priority: 0.0},
             {name: "Kuro", priority: 0.0},
             {name: "", priority: 0.0},
             {name: "", priority: 0.0},
             {name: "", priority: 0.0},
             {name: "", priority: 0.0}];
 
-var party_count = 0;
+var party_count = 2;
 
 setInterval(function ()
 {
@@ -58,6 +58,6 @@ setInterval(function ()
         heal(target);
     }
 
-    if ((target.real_x !== character.real_x || target.real_y !== character.real_y) && !target.rip)
+    if (target && (target.real_x !== character.real_x || target.real_y !== character.real_y) && !target.rip)
         move(target.real_x, target.real_y);
 }, 200); // Loop Delay

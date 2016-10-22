@@ -1,7 +1,7 @@
 /* global character */
 
-var targetting = 0;
-//Monster Range = 0, Character Range = 1
+var targetting = 2;
+//Monster Range = 0, Character Range = 1, Tank Range = 2
 
 var mon1xp = 2000;
 var mon1atk = 150;
@@ -23,8 +23,7 @@ var pot2buy = 1000;
 //Pot Maintainence
 
 var pos = 0;
-var flipcd = 0;
-var stuck = 2;
+var stuck = 3;
 //Distance Maintainence Variables
 
 setInterval(function ()
@@ -88,15 +87,12 @@ setInterval(function ()
         attack(target);
     //Attack
 
-    if (pos >= 5)
-        pos = 1;
-    //Resetting Circle
-
-    var enemydist;
     if (targetting === 0)
         enemydist = parent.G.monsters[target.mtype].range + 20;
     else if (targetting === 1)
         enemydist = character.range - 20;
+    else if (targetting === 2)
+        enemydist = 90;
     //Targetting
 
     move_to_position(target, enemydist);
@@ -114,35 +110,35 @@ function move_to_position(target, enemydist) //Movement Algorithm
     //Get Position
 
     var distmov = Math.sqrt(Math.pow(character.real_x - prevx, 2) + Math.pow(character.real_y - prevy, 2));
-    if (distmov < stuck)
-        pos++;
-    if (parent.distance(character, target) <= enemydist && flipcd > 18)
-    {
-        pos += 2;
-        flipcd = 0;
-    }
-    flipcd++;
+    //var modifier = 0;
+    if (distmov <= stuck)
+        pos = pos + 2;
+        //modifier = 40;
     //Stuck Code
+    
+    if (pos >= 5)
+        pos = 1;
+    //Resetting Circle
 
     if (pos === 1) //Player is left of enemy
-        move(target.real_x - enemydist, target.real_y);
+        move(target.real_x - enemydist, target.real_y /*- modifier*/);
     else if (pos === 2) //Player is above enemy
-        move(target.real_x, target.real_y - enemydist);
+        move(target.real_x /*- modifier*/, target.real_y - enemydist);
     else if (pos === 3) //Player is right of enemy
-        move(target.real_x + enemydist, target.real_y);
+        move(target.real_x + enemydist, target.real_y /*+ modifier*/);
     else if (pos === 4) //Player is below enemy
-        move(target.real_x, target.real_y + enemydist);
+        move(target.real_x /*+ modifier*/, target.real_y + enemydist);
 }
 
 function get_pos(distx, disty)
 {
     if (distx > 0 && Math.abs(distx) < Math.abs(disty)) //Player is left of enemy
         pos = 1;
-    else if (disty === 2 && Math.abs(distx) > Math.abs(disty)) //Player is above enemy
+    if (disty === 2 && Math.abs(distx) > Math.abs(disty)) //Player is above enemy
         pos = 2;
-    else if (distx < 0 && Math.abs(distx) < Math.abs(disty)) //Player is right of enemy
+    if (distx < 0 && Math.abs(distx) < Math.abs(disty)) //Player is right of enemy
         pos = 3;
-    else if (disty > 0 && Math.abs(distx) > Math.abs(disty)) //Player is below enemy
+    if (disty > 0 && Math.abs(distx) > Math.abs(disty)) //Player is below enemy
         pos = 4;
 }
 
