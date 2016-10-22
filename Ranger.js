@@ -117,8 +117,10 @@ function move_to_position(target, enemydist) //Movement Algorithm
     if (distmov < stuck)
         pos++;
     if (parent.distance(character, target) <= enemydist && flipcd > 18)
+    {
         pos += 2;
         flipcd = 0;
+    }
     flipcd++;
     //Stuck Code
 
