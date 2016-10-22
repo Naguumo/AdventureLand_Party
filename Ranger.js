@@ -3,6 +3,17 @@
 var targetting = 0;
 //Monster Range = 0, Character Range = 1
 
+var mon1xp = 2000;
+var mon1atk = 150;
+//Preferred Monster Stats
+
+var mon2xp = 800;
+var mon2atk = 50;
+//Alternate Monster Stats
+
+var invspam = false;
+//Invite Spamming
+
 var prevx = 0;
 var prevy = 0;
 //Previous coords
@@ -11,7 +22,7 @@ var potmin = 50;
 var pot2buy = 1000;
 //Pot Maintainence
 
-var angle;
+var pos = 0;
 var flipcd = 0;
 var stuck = 2;
 //Distance Maintainence Variables
@@ -22,6 +33,14 @@ setInterval(function ()
 
     loot();
     //Loot Chests
+
+    if (invspam)
+    {
+        var parmem = get_nearest_solo_player();
+        if (parmem)
+            parent.socket.emit("party", {event: 'invite', id: parmem.id});
+    }
+    //Invite to Party
 
     if (character.items[0].q < potmin)
         parent.buy("hpot0", pot2buy);
@@ -41,81 +60,92 @@ setInterval(function ()
     //Constrained Healing
 
 
-
-    var charx = character.real_x;
-    var chary = character.real_y;
-    //Character Location
-
     var target = get_targeted_monster();
-    if (!target)
+    if (!target) //Find Priority Monster
     {
-        target = get_nearest_monster({min_xp: 2000, max_att: 150});
+        target = get_nearest_monster({min_xp: mon1xp, max_att: mon1atk});
         if (target)
         {
             change_target(target);
-            angle = Math.atan2(target.real_y - chary, target.real_x - charx);
+            move_to_position(target, enemydist);
         }
-        else if (!target)
+        else if (!target) //Find Alternate Monster
         {
-            target = get_nearest_monster({min_xp: 800, max_att: 50});
+            target = get_nearest_monster({min_xp: mon2xp, max_att: mon2atk});
             if (target)
             {
                 change_target(target);
-                angle = Math.atan2(target.real_y - chary, target.real_x - charx);
+                move_to_position(target, enemydist);
             }
             else
                 return;
         }
     }
-    //Monster Searching
 
-    var enemydist;
-    if (targetting === 0)
-        enemydist = parent.G.monsters[target.mtype].range + 20;
-    else if (targetting === 1)
-        enemydist = character.range - 10;
-    //Targetting
+    //Monster Searching
 
     if (can_attack(target))
         attack(target);
     //Attack
 
-    var parmem = get_nearest_solo_player();
-    if (parmem)
-        parent.socket.emit("party", {event: 'invite', id: parmem.id});
-    //Invite to Party
+    if (pos >= 5)
+        pos = 1;
+    //Resetting Circle
 
-    var distx = target.real_x - charx;
-    var disty = target.real_y - chary;
-    if (!angle && target)
-        angle = Math.atan2(disty, distx);
-    //Enemy Distance and Angle
+    var enemydist;
+    if (targetting === 0)
+        enemydist = parent.G.monsters[target.mtype].range + 20;
+    else if (targetting === 1)
+        enemydist = character.range - 20;
+    //Targetting
 
-    var chx = charx - prevx;
-    var chy = chary - prevy;
-    var distmov = Math.sqrt(chx * chx + chy * chy);
-    if (distmov < stuck)
-        angle = angle + Math.PI * 2 * 0.125;
-    if (parent.distance(character, target) <= enemydist && flipcd > 18)
-    {
-        angle = angle + Math.PI * 2 * 0.35;
-        flipcd = 0;
-    }
-    flipcd++;
-    //Stuck Code
-    var new_x = target.real_x + enemydist * Math.cos(angle);
-    var new_y = target.real_y + enemydist * Math.sin(angle);
-    move(new_x, new_y);
-    //Credit to /u/idrum4316
-    //Following/Maintaining Distance
+    move_to_position(target, enemydist);
+    //Movement
 
-    prevx = Math.ceil(charx);
-    prevy = Math.ceil(chary);
+    prevx = Math.ceil(character.real_x);
+    prevy = Math.ceil(character.real_y);
     //Sets new coords to prev coords
 
 }, 200); // Loop Delay
 
-function get_nearest_solo_player() {
+function move_to_position(target, enemydist) //Movement Algorithm
+{
+    get_pos(target.real_x - character.real_x, target.real_y - character.real_y);
+    //Get Position
+
+    var distmov = Math.sqrt(Math.pow(character.real_x - prevx, 2) + Math.pow(character.real_y - prevy, 2));
+    if (distmov < stuck)
+        pos++;
+    if (parent.distance(character, target) <= enemydist && flipcd > 18)
+        pos += 2;
+        flipcd = 0;
+    flipcd++;
+    //Stuck Code
+
+    if (pos === 1) //Player is left of enemy
+        move(target.real_x - enemydist, target.real_y);
+    else if (pos === 2) //Player is above enemy
+        move(target.real_x, target.real_y - enemydist);
+    else if (pos === 3) //Player is right of enemy
+        move(target.real_x + enemydist, target.real_y);
+    else if (pos === 4) //Player is below enemy
+        move(target.real_x, target.real_y + enemydist);
+}
+
+function get_pos(distx, disty)
+{
+    if (distx > 0 && Math.abs(distx) < Math.abs(disty)) //Player is left of enemy
+        pos = 1;
+    else if (disty === 2 && Math.abs(distx) > Math.abs(disty)) //Player is above enemy
+        pos = 2;
+    else if (distx < 0 && Math.abs(distx) < Math.abs(disty)) //Player is right of enemy
+        pos = 3;
+    else if (disty > 0 && Math.abs(distx) > Math.abs(disty)) //Player is below enemy
+        pos = 4;
+}
+
+function get_nearest_solo_player() //For Invitation Spamming
+{
     var min_d = 999999, target = null;
     for (var id in parent.entities)
     {
