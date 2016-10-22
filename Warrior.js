@@ -42,7 +42,7 @@ setInterval(function ()
 
     var target = get_targeted_monster();
     var ltarget = get_target_of(leader);
-    if (!target || target !== ltarget)
+    if ((!target || target !== ltarget) && ltarget)
     {
         change_target(ltarget);
         target = get_targeted_monster();
