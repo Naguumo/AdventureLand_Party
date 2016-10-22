@@ -36,47 +36,28 @@ setInterval(function ()
         parent.use('mp');
     //Constrained Healing
 
-    //Set target to null;
-    var target = null;
-    //set_message(party_list[0].name);
-
-    for (var x = 0; x < party_count; x++) {
-        set_message("Setting Priority");
-        target = get_player(party_list[x].name);
-        set_message("Not broken!");
-        set_message(target.name);
+    var hipri = 0;
+    for (var x = 0; x < party_count; x++) 
+    {
+        var target = get_player(party_list[x].name);
         if (target)
             change_target(target);
         party_list[x].priority = (target.max_hp - target.hp) / target.max_hp;
-        set_message(party_list[x].priority);
-        set_message("Priority set.");
+        //Assign Priorities
+        
+        if (party_list[x].priority > party_list[hipri].priority)
+            hipri= x;
+        //Find Highest Priority
     }
 
-    var highest_priority = 0;
-    for (var x = 0; x < party_count; x++) {
-        set_message("Finding highest priority.");
-        if (party_list[x].priority > party_list[highest_priority].priority) {
-            highest_priority = x;
-        }
-    }
-    set_message("Highest priority found.");
-
-
-    //target = get_player(party_list[0].name);
-
-    target = get_player(party_list[highest_priority].name);
-    if (party_list[highest_priority].priority > .10 && !target.rip) {
-        if (target)
-            change_target(target);
+    var target = get_player(party_list[hipri].name);
+    if (party_list[hipri].priority > .30 && !target.rip) 
+    {
+        change_target(target);
+        set_message("Targetting: " + target.name);
         heal(target);
-        set_message("Healing");
     }
 
-    if ((target.real_x !== character.real_x) || (target.real_y !== character.real_y) && !target.rip) {
-        move(
-                character.real_x + (target.real_x - character.real_x),
-                character.real_y + (target.real_y - character.real_y)
-                );
-        set_message("Moving to Priority");
-    }
+    if ((target.real_x !== character.real_x || target.real_y !== character.real_y) && !target.rip)
+        move(target.real_x, target.real_y);
 }, 200); // Loop Delay
