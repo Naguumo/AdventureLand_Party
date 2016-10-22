@@ -22,7 +22,7 @@ var potmin = 50;
 var pot2buy = 1000;
 //Pot Maintainence
 
-var pos = 0;
+var angle;
 var stuck = 3;
 //Distance Maintainence Variables
 
@@ -66,7 +66,7 @@ setInterval(function ()
         if (target)
         {
             change_target(target);
-            move_to_position(target, enemydist);
+            angle = Math.atan2(character.real_y - target.real_y, character.real_x - target.real_x);
         }
         else if (!target) //Find Alternate Monster
         {
@@ -74,13 +74,12 @@ setInterval(function ()
             if (target)
             {
                 change_target(target);
-                move_to_position(target, enemydist);
+                angle = Math.atan2(character.real_y - target.real_y, character.real_x - target.real_x);
             }
             else
                 return;
         }
     }
-
     //Monster Searching
 
     if (can_attack(target))
@@ -106,40 +105,17 @@ setInterval(function ()
 
 function move_to_position(target, enemydist) //Movement Algorithm
 {
-    get_pos(target.real_x - character.real_x, target.real_y - character.real_y);
-    //Get Position
-
-    var distmov = Math.sqrt(Math.pow(character.real_x - prevx, 2) + Math.pow(character.real_y - prevy, 2));
-    //var modifier = 0;
-    if (distmov <= stuck)
-        pos = pos + 2;
-        //modifier = 40;
-    //Stuck Code
+    if(!angle && target)
+        angle = Math.atan2(character.real_y - target.real_y, character.real_x - target.real_x);
+    //Set Angle Just in Case
     
-    if (pos >= 5)
-        pos = 1;
-    //Resetting Circle
-
-    if (pos === 1) //Player is left of enemy
-        move(target.real_x - enemydist, target.real_y /*- modifier*/);
-    else if (pos === 2) //Player is above enemy
-        move(target.real_x /*- modifier*/, target.real_y - enemydist);
-    else if (pos === 3) //Player is right of enemy
-        move(target.real_x + enemydist, target.real_y /*+ modifier*/);
-    else if (pos === 4) //Player is below enemy
-        move(target.real_x /*+ modifier*/, target.real_y + enemydist);
-}
-
-function get_pos(distx, disty)
-{
-    if (distx > 0 && Math.abs(distx) < Math.abs(disty)) //Player is left of enemy
-        pos = 1;
-    if (disty === 2 && Math.abs(distx) > Math.abs(disty)) //Player is above enemy
-        pos = 2;
-    if (distx < 0 && Math.abs(distx) < Math.abs(disty)) //Player is right of enemy
-        pos = 3;
-    if (disty > 0 && Math.abs(distx) > Math.abs(disty)) //Player is below enemy
-        pos = 4;
+    var distmov = Math.sqrt(Math.pow(character.real_x - prevx, 2) + Math.pow(character.real_y - prevy, 2));
+    //Distance Since Previous
+    
+    if(distmov < stuck)
+        angle = angle + (Math.PI*2*0.125);
+    
+    move(target.real_x + enemydist * Math.cos(angle), target.real_y + enemydist * Math.sin(angle));
 }
 
 function get_nearest_solo_player() //For Invitation Spamming
