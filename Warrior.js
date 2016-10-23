@@ -66,13 +66,15 @@ setInterval(function ()
     if (ltarget && ltarget === target)
     {
         move_to_position(ltarget, enemydist);
-        set_message("Attacking: " + target.name);
+        set_message("Attacking: " + target.mtype);
     }
-    else
+    else if(leader)
     {
         move(leader.real_x, leader.real_y);
         set_message("Following: " + leader.name);
     }
+	else
+		set_message("Lost");
     //Movement
 
     prevx = Math.ceil(character.real_x);

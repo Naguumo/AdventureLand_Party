@@ -4,7 +4,7 @@ var targetting = 2;
 //Monster Range = 0, Character Range = 1, Tank Range = 2
 
 var mon1xp = 2000;
-var mon1atk = 150;
+var mon1atk = 250;
 //Preferred Monster Stats
 
 var mon2xp = 800;
@@ -12,6 +12,7 @@ var mon2atk = 50;
 //Alternate Monster Stats
 
 var invspam = false;
+var party = 0;
 //Invite Spamming
 
 var prevx = 0;
@@ -23,7 +24,8 @@ var pot2buy = 1000;
 //Pot Maintainence
 
 var angle;
-var stuck = 3;
+var stuck = 1;
+var stuckcd = 0;
 //Distance Maintainence Variables
 
 setInterval(function ()
@@ -33,8 +35,9 @@ setInterval(function ()
     loot();
     //Loot Chests
 
-    if (invspam)
+    if (invspam && party < 6)
     {
+        get_party();
         var parmem = get_nearest_solo_player();
         if (parmem)
             parent.socket.emit("party", {event: 'invite', id: parmem.id});
@@ -112,8 +115,12 @@ function move_to_position(target, enemydist) //Movement Algorithm
     var distmov = Math.sqrt(Math.pow(character.real_x - prevx, 2) + Math.pow(character.real_y - prevy, 2));
     //Distance Since Previous
     
-    if(distmov < stuck)
+    if(distmov < stuck && stuckcd > 10)
+    {
         angle = angle + (Math.PI*2*0.125);
+        stuckcd = 0;
+    }
+    stuckcd++;
     
     move(target.real_x + enemydist * Math.cos(angle), target.real_y + enemydist * Math.sin(angle));
 }
@@ -134,4 +141,17 @@ function get_nearest_solo_player() //For Invitation Spamming
     }
     return target;
     //Credit to /u/Sulsaries
+}
+
+function get_party()
+{
+    party = 1;
+    for(var id in parent.entities)
+    {
+        var current = parent.entities[id];
+        if(current.player === false || current.dead || current.party !== character.party)
+            continue;
+        if(current.player === true)
+            party++;
+    }
 }
