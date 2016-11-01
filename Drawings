@@ -19,24 +19,16 @@ setInterval(function(){
 	
 	draw_circle(charx, chary, character.range);
 	//Current Location
+	
 	if(target && target.type == 'monster')
 	{
 		draw_circle(tarx, tary, parent.G.monsters[target.mtype].range);
-		for(var i in monarr)
-		{
-			if(monarr[i].type == parent.G.monsters[target.mtype])
-			{
-				var bound = monarr[i].boundary;
-				draw_square(bound[0],bound[1],bound[2],bound[3]);
-			}
-		}
 	}
 	else if(target && target.type == 'character')
 		draw_circle(tarx, tary, target.range);
 	//Target Location
 		
-	prevx = character.real_x;
-	prevy = character.real_y;
+	prevx = charx, prevy = chary;
 	
 	if(target)
 		prevtx = target.real_x,	prevty = target.real_y;
