@@ -1,5 +1,7 @@
 var prevx, prevy;
 var prevtx, prevty;
+var monarr = parent.G.maps[parent.current_map].monsters;
+
 setInterval(function(){
 	
 	var charx = character.real_x;
@@ -18,7 +20,17 @@ setInterval(function(){
 	draw_circle(charx, chary, character.range);
 	//Current Location
 	if(target && target.type == 'monster')
+	{
 		draw_circle(tarx, tary, parent.G.monsters[target.mtype].range);
+		for(var i in monarr)
+		{
+			if(monarr[i].type == parent.G.monsters[target.mtype])
+			{
+				var bound = monarr[i].boundary;
+				draw_square(bound[0],bound[1],bound[2],bound[3]);
+			}
+		}
+	}
 	else if(target && target.type == 'character')
 		draw_circle(tarx, tary, target.range);
 	//Target Location
@@ -31,3 +43,11 @@ setInterval(function(){
 	
 	set_message("Working!");
 },100); // Loops every 1/4 seconds.
+
+function draw_square(x1, y1, x2, y2)
+{
+	draw_line(x1, y1, x2, y1, 2);
+	draw_line(x1, y2, x2, y2, 2);
+	draw_line(x1, y1, x1, y2, 2);
+	draw_line(x2, y1, x2, y2, 2);
+}
